@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuatro en Línea</title>
+    <style>
+        body {
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid black;
+        }
+        .hints {
+            position: relative;
+            top: -10px;
+        }
+        .hint {
+            width: 50px;
+            height: 50px;
+            display: inline-block;
+            animation: bounce 1s infinite alternate;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Cuatro en Línea</h1>
+    <div id="game">
+        <canvas id="gameCanvas" width="800" height="700"></canvas>        
+    </div>
+    <button onclick="startGame(4)">Jugar 4 en línea</button>
+    <button onclick="startGame(5)">Jugar 5 en línea</button>
+    <button onclick="startGame(6)">Jugar 6 en línea</button>
+
+    <button onclick="restartGame()">Reiniciar Juego</button>
+    <div id="timer">Tiempo: 60s</div>
+    <script src="./js/juego/Ficha.js"></script>
+    <script src="./js/juego/Jugador.js"></script>
+    <script src="./js/juego/Tablero.js"></script>
+    <script src="./js/juego/connect4.js"></script>
+</body>
+</html>
