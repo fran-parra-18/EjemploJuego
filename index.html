@@ -35,9 +35,12 @@
     <button onclick="startGame(4)">Jugar 4 en línea</button>
     <button onclick="startGame(5)">Jugar 5 en línea</button>
     <button onclick="startGame(6)">Jugar 6 en línea</button>
+    <!-- Input para ingresar el valor de 'x' -->
+    <input type="number" id="gameInput" placeholder="Ingresa valor de x" min="4" max="6">
 
-    <button onclick="restartGame()">Reiniciar Juego</button>
-    <div id="timer">Tiempo: 60s</div>
+    <!-- Botón para iniciar el juego con el valor ingresado -->
+    <button onclick="activateGame()">Iniciar Juego</button>
+
     <script src="./js/juego/Ficha.js"></script>
     <script src="./js/juego/Jugador.js"></script>
     <script src="./js/juego/Tablero.js"></script>

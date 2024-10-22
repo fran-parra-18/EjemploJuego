@@ -70,8 +70,7 @@ function startGame(x) {
     );
     currentPlayer = 0;  // Reiniciamos el turno al primer jugador
     radius = board.getCellSize() / 2 - 5;
-    draw();             // Redibujar el tablero con las nuevas dimensiones
-
+    draw();            // Redibujar el tablero con las nuevas dimensiones
 }
 
 function drawPlayerPieces() {    
@@ -306,3 +305,20 @@ function startTimer() {
     }, 1000);
 }
 */
+
+
+/*funcion de prueba*/
+function activateGame() {
+    // Obtener el valor del input
+    let inputValue = document.getElementById("gameInput").value;
+
+    // Convertir el valor a número entero
+    let xValue = parseInt(inputValue);
+
+    // Verificar que el valor sea válido (por ejemplo, entre 4 y 6)
+    if (!isNaN(xValue) && xValue >=4) {
+        startGame(xValue);  // Llamar a la función con el valor ingresado
+    } else {
+        alert("Por favor, ingresa un número válido entre 4 y 6");
+    }
+}
