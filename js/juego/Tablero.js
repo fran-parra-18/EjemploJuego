@@ -15,7 +15,9 @@ class Tablero {
         this.ganador=false;
 
         this.cellSize = (canvas.height - this.marginTop - this.marginBottom) / this.rows;
-        
+
+        //radio del circulo
+        this.radius = null
          // Inicializamos la matriz del tablero
         this.grid = this.createGrid();
     }
@@ -66,7 +68,7 @@ class Tablero {
         let posX = 0;
         let posY = 0;
         
-        let radius =  this.cellSize / 2 - 5; // Radio de las casillas (agujeros)...-5 es la distancia del agujero al borde de la casilla
+        this.radius =  this.cellSize / 2 - 5; // Radio de las casillas (agujeros)...-5 es la distancia del agujero al borde de la casilla
         
         this.context.save();
         // Dibujamos las casillas del tablero
@@ -85,7 +87,7 @@ class Tablero {
                 this.context.arc(
                     posX + this.cellSize / 2,  // Coordenada X del centro del círculo
                     posY + this.cellSize / 2, // Coordenada Y del centro del círculo
-                    radius,                 // Radio del círculo
+                    this.radius,                 // Radio del círculo
                     0, Math.PI * 2           // Dibujar círculo completo
                 );
                 this.context.fillStyle = '#ffffff'; // Color blanco para el agujero
@@ -93,9 +95,8 @@ class Tablero {
                 this.context.closePath();
 
                 const piece = this.grid[fila][columna];
-                
                 if (piece) {
-                    piece.draw(ctx,this.cellSize);
+                    piece.draw(ctx);
                 }
             }
         }
@@ -105,47 +106,32 @@ class Tablero {
 
 
     // Coloca una ficha en la columna correspondiente
-    dropDisc(col, player) {        
+    dropDisc(col, player) {      
         for (let row = this.rows - 1; row >= 0; row--) {
             if (!this.grid[row][col]) {
-                let radius = this.cellSize / 2 - 5;
-                const piece = new Ficha(player, col * this.cellSize + this.marginLeft, -this.cellSize, radius);
-                this.grid[row][col] = piece;
-                this.animateDrop(piece, row, col);                
+                let piece = new Ficha(player, (col * this.cellSize + this.marginLeft)+this.cellSize / 2 , this.cellSize, this.radius);
+                this.grid[row][col] = piece;                
+                piece.animateDrop(piece, row, col,this);                
                 return true;
             }
         }
         return false; // Columna llena
     }
 
-    // Animar la caída de la ficha
-    animateDrop(piece, targetRow, col) {
-        
-        const targetY = targetRow * this.cellSize + this.marginTop;
-        
-        
-
-        const interval = setInterval(() => {
-            piece.y += 10;
-            if (piece.y >= targetY) {
-                piece.y = targetY;
-                clearInterval(interval);
-                if (this.checkForWin(piece, targetRow, col)) {
-                    alert(`${piece.player.name} gana!`);
-                    this.ganador=true;
-                }
-                
-            }
-            draw();
-        }, 20);
-    }
 
     // Verificar si hay 4 fichas en línea
     checkForWin(piece, row, col) {
-        return this.checkDirection(piece, row, col, 1, 0) || // Horizontal
+        let winner= this.checkDirection(piece, row, col, 1, 0) || // Horizontal
                this.checkDirection(piece, row, col, 0, 1) || // Vertical
                this.checkDirection(piece, row, col, 1, 1) || // Diagonal \
                this.checkDirection(piece, row, col, 1, -1);  // Diagonal /
+
+        console.log(winner);
+        
+        if (winner){
+            alert(`${piece.player.name} gana!`);
+            this.ganador=true;
+        }
     }
 
     // Verificar si hay 4 fichas consecutivas en una dirección

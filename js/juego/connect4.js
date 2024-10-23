@@ -15,6 +15,8 @@ let radius = null;// Tamaño de las fichas que se mostrarán arriba
 let buttonWidth = 200;
 let buttonHeight = 40;
 
+let buttonBackSize = 30;
+
 // Dibuja el tablero y las fichas
 function draw() {
     if(xEnLinea!=0){
@@ -24,7 +26,9 @@ function draw() {
         board.draw(ctx);
         displayTurn(); 
         drawPlayerPieces();
-        // Dibuja el botón de reiniciar en la esquina inferior derecha
+
+
+        // Dibuja el botón de reiniciar
         let restartButtonX = canvas.width - buttonWidth - 20;
         let restartButtonY = canvas.height - buttonHeight - 20;
         ctx.fillStyle = "#FF0000"; // Rojo para reiniciar
@@ -32,20 +36,16 @@ function draw() {
         ctx.fillStyle = "#FFFFFF";
         ctx.fillText("Reiniciar", restartButtonX + buttonWidth / 2, restartButtonY + buttonHeight / 2);
 
-        //dibuja boton
+        //dibuja boton back
         let backButtonX = 20;
         let backButtonY = 20;
         ctx.fillStyle = "#FF5733"; // Naranja para el botón
-        ctx.fillRect(backButtonX, backButtonY, 30, 30);
+        ctx.fillRect(backButtonX, backButtonY, buttonBackSize, buttonBackSize);
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillText("X", backButtonX + 30 / 2, backButtonY + 30 / 2); 
+        ctx.fillText("X", backButtonX + buttonBackSize / 2, backButtonY + buttonBackSize / 2); 
 
         if (draggedPiece) {
-            ctx.beginPath();
-            ctx.arc(draggedPiecePos.x, draggedPiecePos.y, radius, 0, Math.PI * 2); // Ficha de radio
-            ctx.fillStyle = draggedPiece.color;
-            ctx.fill();
-            ctx.closePath();
+            draggedPiece.draw(ctx);
         }
     }else{
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -74,7 +74,6 @@ function startGame(x) {
 }
 
 function drawPlayerPieces() {    
-
     players.forEach((player, index) => {
         let x=null
         if(index==0){
@@ -82,15 +81,10 @@ function drawPlayerPieces() {
         }else{
             x = board.marginLeft+(board.cellSize*board.cols)-radius ; // Espacio entre fichas
         }     
-        
         let y = 80; // Posición fija en la parte superior del canvas
-        player.piecePosition = { x, y, radius }; // Guardamos la posición para detectar el arrastre
-
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = player.color;
-        ctx.fill();
-        ctx.closePath();
+        let piece = new Ficha(player,x,y,radius)        
+        piece.draw(ctx,board.cellSize);
+        player.setNextPiece(piece);
     });
 }
 
@@ -115,23 +109,22 @@ canvas.addEventListener('mousedown', (event) => {
     let y = event.clientY - rect.top;
 
     // Verifica si se hace clic en una de las fichas del jugador actual
-    let currentPlayerPiece = players[currentPlayer].piecePosition; // Ficha del jugador actual
-    let { x: pieceX, y: pieceY, radius } = currentPlayerPiece;
+    let currentPlayerPiece = players[currentPlayer].getNextPiece(); // Ficha del jugador actual    
     
-    let distance = Math.sqrt((x - pieceX) ** 2 + (y - pieceY) ** 2);
+    let distance = Math.sqrt((x - currentPlayerPiece.x) ** 2 + (y - currentPlayerPiece.y) ** 2);
     
+
     // Solo permite arrastrar la ficha si es del jugador actual
     if (distance < radius) {
-        draggedPiece = players[currentPlayer]; // Guarda el jugador actual cuya ficha se arrastra
-        draggedPiecePos = { x: pieceX, y: pieceY }; // Inicializa la posición arrastrada
+        draggedPiece = players[currentPlayer].getNextPiece(); // Guarda el jugador actual cuya ficha se arrastra
     }
 });
 
 canvas.addEventListener('mousemove', (event) => {
     if (draggedPiece) {
         let rect = canvas.getBoundingClientRect();
-        draggedPiecePos.x = event.clientX - rect.left;
-        draggedPiecePos.y = event.clientY - rect.top;
+        draggedPiece.x = event.clientX - rect.left;
+        draggedPiece.y = event.clientY - rect.top;
         draw(); // Redibujar el canvas con la ficha moviéndose
     }
 });
@@ -149,7 +142,7 @@ canvas.addEventListener('mouseup', (event) => {
             let hintX = board.marginLeft + col * board.cellSize;
             if (x > hintX && x < hintX + board.cellSize && y > board.marginTop) {
                 // Colocar la ficha en la columna
-                if (board.dropDisc(col, draggedPiece)) {
+                if (board.dropDisc(col, players[currentPlayer])) {
                     draw(); // Redibuja el tablero
                     switchTurns();
                     pieceDropped = true;
@@ -159,41 +152,13 @@ canvas.addEventListener('mouseup', (event) => {
         }
 
         // Si no se ha colocado la ficha, devolverla a su lugar
-        if (!pieceDropped) {
-            
-            let startPos = draggedPiece.piecePosition;  // Posición inicial de la ficha
-            
-            returnPieceToStart(draggedPiece, startPos);  // Iniciar animación de retorno
+        if (!pieceDropped) {          
+            draggedPiece.returnPieceToStart(draggedPiece);  // Iniciar animación de retorno
         }
 
         draggedPiece = null; // Reseteamos el arrastre
     }
 });
-
-function returnPieceToStart(player, startPos) {
-    let frames = 20;  // Número de frames para la animación
-    let deltaX = (startPos.x - draggedPiecePos.x) / frames;
-    let deltaY = (startPos.y - draggedPiecePos.y) / frames;
-    
-    let currentFrame = 0;
-
-    function animateReturn() {
-        if (currentFrame < frames) {
-            draggedPiecePos.x += deltaX;
-            draggedPiecePos.y += deltaY;
-            draw();  // Redibujar el tablero y la ficha
-            currentFrame++;
-            requestAnimationFrame(animateReturn);  // Continuar animando
-        } else {
-            // Una vez que termina la animación, devuelve la ficha a su posición original
-            draggedPiecePos.x = startPos.x;
-            draggedPiecePos.y = startPos.y;
-            draw();
-        }
-    }
-
-    animateReturn();
-}
 
 function drawButtons() {
     // Configuraciones básicas de los botones    
@@ -223,7 +188,6 @@ function drawButtons() {
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText("Jugar 6 en línea", canvas.width / 2, startY + buttonHeight * 3 + margin);
 }
-
 
 canvas.addEventListener('click', function(event) {
     let rect = canvas.getBoundingClientRect();
@@ -258,7 +222,7 @@ canvas.addEventListener('click', function(event) {
         // Coordenadas del botón de "Volver"
         let backButtonX = 20;
         let backButtonY = 20;
-        if (x >= backButtonX && x <= backButtonX + buttonWidth && y >= backButtonY && y <= backButtonY + buttonHeight) {
+        if (x >= backButtonX && x <= backButtonX + buttonBackSize && y >= backButtonY && y <= backButtonY + buttonBackSize) {
             xEnLinea=0;
             draw() // Función que maneja el volver atrás
         }
@@ -279,10 +243,6 @@ function restartGame() {
     currentPlayer = 0;
     draw();
 }
-
-
-
-
 
 // Inicia el juego
 window.onload = () => {
